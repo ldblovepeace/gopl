@@ -18,13 +18,15 @@ func(s *IntSet) Has(x int) bool{
 	//i和words[i]结合能确认这个值是否存在
 }
 
-func(s *IntSet) Add(x int){
-	word, bit := x/64, uint(x%64)
-	for len(s.words) <= word{//for循环让s.words[]长度能够容纳s.words[word]
-		s.words = append(s.words, 0)
-		//append 函数向后加
+func(s *IntSet) Add(val... int){
+	for _, x := range val{
+		word, bit := x/64, uint(x%64)
+		for len(s.words) <= word{//for循环让s.words[]长度能够容纳s.words[word]
+			s.words = append(s.words, 0)
+			//append 函数向后加
+		}
+		s.words[word] |= (1<<bit)
 	}
-	s.words[word] |= (1<<bit)
 }
 
 func(s *IntSet) UnionWith(t *IntSet){
@@ -89,32 +91,81 @@ func (s *IntSet)Copy(t *IntSet){
 	s.words = t.words
 }
 
+func (s *IntSet)IntersectWith(t *IntSet){
+	for i := range s.words{
+		if i<len(t.words){
+			s.words[i] &= t.words[i]
+		}else{
+			s.words[i] = 0
+		}
+	}
+}
+
+func (s *IntSet)DifferenceWith(t *IntSet){
+	for i,word := range s.words{
+		if i<len(t.words){
+			if word!=0{
+				for j:=0; j<64; j++{
+					if word&(1<<uint(j))!=0{
+						if t.Has(64*i + j){
+							s.words[i] -= (1<<uint(j)) 
+						}
+					}
+				}
+			} 
+		}
+	}
+}
+
+func (s *IntSet)SymmetricDifference(t *IntSet){
+	for len(s.words) < len(t.words){
+		s.words = append(s.words, 0)
+	} 
+
+	for i := range s.words{
+		if i<len(t.words){
+			s.words[i] ^= t.words[i]
+		}
+	}
+}
+
 func main(){
 	var x,y IntSet
-	x.Add(1)
-	x.Add(121)
-	x.Add(88)
+	// x.Add(1)
+	// x.Add(121)
+	// x.Add(88)
+	// fmt.Println(x.String())
+	// fmt.Print("the length of x is ", x.Len(), "\n")
+
+	// y.Add(1)
+	// y.Add(111)
+	// y.Add(9)
+	// fmt.Println(y.String())
+
+	// x.UnionWith(&y)
+	// fmt.Println(x.String())
+	// fmt.Println(x.Has(111),x.Has(8888))
+	// fmt.Println(x.Len())
+
+	// x.Remove(9)
+	// fmt.Println(x.String())
+	// _,err := x.Remove(10)
+	// fmt.Println(x.String(), "\n", err)
+
+	// y.Clear()
+	// fmt.Println(y.String())
+
+	// y.Copy(&x)
+	// fmt.Println(y.String())
+
+	// y.Add(1,2,3)
+	// fmt.Println(y.String())
+	x.Add(1,2,3,88,123)
+	y.Add(1,2,3,4,9,11)
+
 	fmt.Println(x.String())
-	fmt.Print("the length of x is ", x.Len(), "\n")
-
-	y.Add(1)
-	y.Add(111)
-	y.Add(9)
 	fmt.Println(y.String())
-
-	x.UnionWith(&y)
+	
+	x.SymmetricDifference(&y)
 	fmt.Println(x.String())
-	fmt.Println(x.Has(111),x.Has(8888))
-	fmt.Println(x.Len())
-
-	x.Remove(9)
-	fmt.Println(x.String())
-	_,err := x.Remove(10)
-	fmt.Println(x.String(), "\n", err)
-
-	y.Clear()
-	fmt.Println(y.String())
-
-	y.Copy(&x)
-	fmt.Println(y.String())
 }
